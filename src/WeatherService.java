@@ -24,5 +24,15 @@ public class WeatherService {
                 .build();
 
         HttpClient client = HttpClient.newHttpClient();
+
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            System.out.println("Код статуса: " + response.statusCode());
+            System.out.println("Ответ сервера:");
+            System.out.println(response.body());
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
