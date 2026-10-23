@@ -25,12 +25,46 @@ public class WeatherService {
 
         HttpClient client = HttpClient.newHttpClient();
 
+        // Получаем ответ
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             System.out.println("Код статуса: " + response.statusCode());
             System.out.println("Ответ сервера:");
             System.out.println(response.body());
+
+            //Создаем маппер и превращаем ответ в дерево JsonNode
+            ObjectMapper mapper = new ObjectMapper();
+
+            JsonNode rootNode = mapper.readTree(response.body());
+
+            // Парсим текущую температуру
+            int CurrentTemp = rootNode.path("fact").path("temp").asInt();
+
+            System.out.println("Текущая температура: " + CurrentTemp + "°C");
+
+            //Считаем среднюю температуру по прогнозу
+            //Превращаем массив forecasts в дерево JsonNode
+            JsonNode forecastsNode = rootNode.path("forecasts");
+
+            double TotalSum = 0; // Сумма
+            int count = 0; // Счетчик значений
+
+            if (forecastsNode.isArray()) {
+                for (JsonNode dayForecast : forecastsNode) {
+                    JsonNode tempAvgNode = dayForecast.path("parts").path("day").path("temp_avg");
+
+                    if (!tempAvgNode.isMissingNode()) {
+                        TotalSum += tempAvgNode.asDouble();
+                        count++;
+                    }
+                }
+            }
+
+            if (count > 0) {
+                double averageTemp = TotalSum / count;
+                System.out.println("Средняя температура на " + count + " дн.: " + averageTemp + "°C");
+            }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
